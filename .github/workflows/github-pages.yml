@@ -54,6 +54,7 @@ jobs:
           bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: production
+          PAGES_REPO_NWO: anuu1989/aws-control-tower-landingzone
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

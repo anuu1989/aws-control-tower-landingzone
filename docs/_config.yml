@@ -9,7 +9,10 @@
 title: AWS Control Tower Landing Zone
 description: Enterprise-grade Terraform automation for AWS Control Tower with comprehensive governance, security, and compliance controls
 baseurl: "/aws-control-tower-landingzone" # the subpath of your site, e.g. /blog
-url: "https://anuu1989.github.io"# the base hostname & protocol for your site
+url: "https://anuu1989.github.io" # the base hostname & protocol for your site
+
+# Repository (required for GitHub Pages)
+repository: anuu1989/aws-control-tower-landingzone
 
 # Theme
 theme: just-the-docs
@@ -36,9 +39,9 @@ heading_anchors: true
 # Aux links (top right navigation)
 aux_links:
   "View on GitHub":
-    - "//github.com/your-org/aws-control-tower-landingzone"
+    - "//github.com/anuu1989/aws-control-tower-landingzone"
   "Download":
-    - "//github.com/your-org/aws-control-tower-landingzone/archive/main.zip"
+    - "//github.com/anuu1989/aws-control-tower-landingzone/archive/main.zip"
 
 # Aux links styling
 aux_links_new_tab: true
@@ -119,7 +122,6 @@ kramdown:
 # Plugins
 plugins:
   - jekyll-seo-tag
-  - jekyll-github-metadata
   - jekyll-include-cache
 
 # Exclude from processing
@@ -145,6 +147,9 @@ compress_html:
   profile: false
 
 # GitHub Pages specific
+github:
+  repository_url: "https://github.com/anuu1989/aws-control-tower-landingzone"
+  repository_name: "aws-control-tower-landingzone"
 github:
   repository_url: "https://github.com/anuu1989/aws-control-tower-landingzone"
   repository_name: "aws-control-tower-landingzone"
