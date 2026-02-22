@@ -1,0 +1,32 @@
+# ============================================================================
+# Example Terraform Backend Configuration
+# ============================================================================
+
+project_name     = "control-tower"
+environment      = "production"
+region           = "ap-southeast-2"
+
+# S3 bucket name must be globally unique
+state_bucket_name = "your-org-control-tower-terraform-state"
+
+# AWS principals allowed to access the state
+allowed_principals = [
+  "arn:aws:iam::123456789012:root",
+  "arn:aws:iam::123456789012:role/TerraformRole"
+]
+
+# Retention settings
+state_retention_days = 90   # Keep old state versions for 90 days
+logs_retention_days  = 365  # Keep access logs for 1 year
+
+# Features
+enable_logging    = true
+enable_monitoring = true
+create_iam_policy = true
+
+# Monitoring
+state_bucket_size_threshold = 10737418240  # 10 GB
+alarm_sns_topic_arn         = ""           # Optional: SNS topic for alarms
+
+# KMS settings
+kms_deletion_window = 30  # Days before KMS key is deleted

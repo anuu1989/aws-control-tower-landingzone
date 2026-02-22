@@ -1,0 +1,115 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.5.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.insecure",
+          "type": "aws_s3_bucket",
+          "name": "insecure",
+          "values": {
+            "bucket": "insecure-bucket",
+            "tags": {}
+          }
+        },
+        {
+          "address": "aws_db_instance.public",
+          "type": "aws_db_instance",
+          "name": "public",
+          "values": {
+            "identifier": "public-db",
+            "publicly_accessible": true,
+            "storage_encrypted": false,
+            "backup_retention_period": 0,
+            "multi_az": false,
+            "tags": {
+              "Environment": "prod"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.no_imdsv2",
+          "type": "aws_instance",
+          "name": "no_imdsv2",
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "metadata_options": [
+              {
+                "http_tokens": "optional"
+              }
+            ],
+            "monitoring": false,
+            "disable_api_termination": false,
+            "tags": {
+              "Environment": "prod"
+            }
+          }
+        },
+        {
+          "address": "aws_security_group.open",
+          "type": "aws_security_group",
+          "name": "open",
+          "values": {
+            "name": "open-sg",
+            "ingress": [
+              {
+                "cidr_blocks": ["0.0.0.0/0"],
+                "from_port": 22,
+                "to_port": 22,
+                "protocol": "tcp"
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_kms_key.no_rotation",
+          "type": "aws_kms_key",
+          "name": "no_rotation",
+          "values": {
+            "description": "Key without rotation",
+            "enable_key_rotation": false
+          }
+        },
+        {
+          "address": "aws_cloudtrail.insecure",
+          "type": "aws_cloudtrail",
+          "name": "insecure",
+          "values": {
+            "name": "insecure-trail",
+            "enable_log_file_validation": false,
+            "is_multi_region_trail": false,
+            "include_global_service_events": false
+          }
+        },
+        {
+          "address": "aws_guardduty_detector.disabled",
+          "type": "aws_guardduty_detector",
+          "name": "disabled",
+          "values": {
+            "enable": false
+          }
+        },
+        {
+          "address": "aws_elasticache_replication_group.insecure",
+          "type": "aws_elasticache_replication_group",
+          "name": "insecure",
+          "values": {
+            "replication_group_id": "insecure-cache",
+            "at_rest_encryption_enabled": false,
+            "transit_encryption_enabled": false
+          }
+        },
+        {
+          "address": "aws_secretsmanager_secret.no_kms",
+          "type": "aws_secretsmanager_secret",
+          "name": "no_kms",
+          "values": {
+            "name": "my-secret"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,296 @@
+# ============================================================================
+# Terraform Drift Detection Workflow
+# ============================================================================
+# This workflow runs periodically to detect infrastructure drift by comparing
+# the actual infrastructure state with the Terraform configuration.
+#
+# Schedule: Every 6 hours
+# Triggers: Manual dispatch also available
+#
+# ============================================================================
+
+name: Drift Detection
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to check for drift'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - production
+          - staging
+          - development
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  detect-drift:
+    name: Detect Infrastructure Drift
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        environment: [production]
+      fail-fast: false
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-2
+      
+      - name: Terraform Init
+        run: terraform init
+        env:
+          TF_VAR_environment: ${{ matrix.environment }}
+      
+      - name: Terraform Plan (Detect Drift)
+        id: plan
+        run: |
+          terraform plan -detailed-exitcode -out=tfplan 2>&1 | tee plan_output.txt
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+        continue-on-error: true
+        env:
+          TF_VAR_environment: ${{ matrix.environment }}
+      
+      - name: Check for Drift
+        id: drift
+        run: |
+          EXIT_CODE=${{ steps.plan.outputs.exit_code }}
+          
+          if [ "$EXIT_CODE" -eq "0" ]; then
+            echo "status=no-drift" >> $GITHUB_OUTPUT
+            echo "message=No infrastructure drift detected" >> $GITHUB_OUTPUT
+          elif [ "$EXIT_CODE" -eq "2" ]; then
+            echo "status=drift-detected" >> $GITHUB_OUTPUT
+            echo "message=Infrastructure drift detected!" >> $GITHUB_OUTPUT
+          else
+            echo "status=error" >> $GITHUB_OUTPUT
+            echo "message=Error running terraform plan" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Parse Drift Details
+        if: steps.drift.outputs.status == 'drift-detected'
+        id: parse
+        run: |
+          # Extract resource changes from plan output
+          CHANGES=$(grep -A 5 "Terraform will perform" plan_output.txt || echo "Unable to parse changes")
+          echo "changes<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create Drift Issue
+        if: steps.drift.outputs.status == 'drift-detected'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const planOutput = fs.readFileSync('plan_output.txt', 'utf8');
+            
+            // Check if drift issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'drift-detection,${{ matrix.environment }}'
+            });
+            
+            const issueBody = `## 🚨 Infrastructure Drift Detected
+            
+            **Environment:** ${{ matrix.environment }}
+            **Detected:** ${new Date().toISOString()}
+            **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ### Summary
+            
+            Infrastructure drift has been detected between the Terraform configuration and the actual AWS infrastructure state.
+            
+            ### Changes Required
+            
+            \`\`\`
+            ${{ steps.parse.outputs.changes }}
+            \`\`\`
+            
+            ### Full Plan Output
+            
+            <details>
+            <summary>Click to expand full terraform plan output</summary>
+            
+            \`\`\`hcl
+            ${planOutput.substring(0, 60000)}
+            \`\`\`
+            
+            </details>
+            
+            ### Recommended Actions
+            
+            1. **Review the changes** to understand what has drifted
+            2. **Investigate the cause** of the drift (manual changes, external automation, etc.)
+            3. **Decide on remediation**:
+               - Apply Terraform to bring infrastructure back to desired state
+               - Update Terraform configuration to match current state
+               - Document and approve the drift if intentional
+            4. **Close this issue** once drift is resolved
+            
+            ### How to Investigate
+            
+            \`\`\`bash
+            # Pull latest code
+            git pull
+            
+            # Initialize Terraform
+            terraform init
+            
+            # Review the plan
+            terraform plan
+            
+            # If changes are correct, apply them
+            terraform apply
+            \`\`\`
+            
+            ---
+            
+            *This issue was automatically created by the drift detection workflow.*
+            `;
+            
+            if (issues.data.length === 0) {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[DRIFT] Infrastructure Drift Detected - ${{ matrix.environment }}`,
+                body: issueBody,
+                labels: ['drift-detection', '${{ matrix.environment }}', 'infrastructure', 'urgent']
+              });
+            } else {
+              // Update existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues.data[0].number,
+                body: `### 🔄 Drift Still Present\n\n**Re-detected:** ${new Date().toISOString()}\n\n${issueBody}`
+              });
+            }
+      
+      - name: Send Slack Notification
+        if: steps.drift.outputs.status == 'drift-detected'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: '🚨 Infrastructure Drift Detected',
+              attachments: [{
+                color: 'danger',
+                fields: [
+                  {
+                    title: 'Environment',
+                    value: '${{ matrix.environment }}',
+                    short: true
+                  },
+                  {
+                    title: 'Status',
+                    value: 'Drift Detected',
+                    short: true
+                  },
+                  {
+                    title: 'Workflow',
+                    value: '<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>',
+                    short: false
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
+      
+      - name: Upload Plan Artifact
+        if: steps.drift.outputs.status == 'drift-detected'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-plan-${{ matrix.environment }}-${{ github.run_number }}
+          path: |
+            tfplan
+            plan_output.txt
+          retention-days: 30
+      
+      - name: Summary
+        run: |
+          echo "## Drift Detection Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ matrix.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.drift.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Message:** ${{ steps.drift.outputs.message }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.drift.outputs.status }}" == "drift-detected" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ⚠️ Action Required" >> $GITHUB_STEP_SUMMARY
+            echo "Infrastructure drift has been detected. Please review and remediate." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.drift.outputs.status }}" == "no-drift" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ✅ All Good" >> $GITHUB_STEP_SUMMARY
+            echo "No infrastructure drift detected." >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Fail on Drift
+        if: steps.drift.outputs.status == 'drift-detected'
+        run: |
+          echo "Infrastructure drift detected!"
+          exit 1
+
+  notify-success:
+    name: Notify Success
+    runs-on: ubuntu-latest
+    needs: detect-drift
+    if: success()
+    
+    steps:
+      - name: Send Success Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: '✅ Drift Detection Completed',
+              attachments: [{
+                color: 'good',
+                fields: [
+                  {
+                    title: 'Status',
+                    value: 'No Drift Detected',
+                    short: true
+                  },
+                  {
+                    title: 'Timestamp',
+                    value: '${new Date().toISOString()}',
+                    short: true
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true

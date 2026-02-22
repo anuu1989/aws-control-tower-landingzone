@@ -1,0 +1,291 @@
+# ============================================================================
+# Terraform CI/CD Pipeline for AWS Control Tower
+# ============================================================================
+# This workflow provides comprehensive CI/CD for Control Tower deployment:
+# - Validation: Format, syntax, and configuration validation
+# - Security: tfsec and Checkov security scanning
+# - Policy Testing: OPA policy validation
+# - Unit Testing: Terratest integration tests (main branch only)
+# - Planning: Terraform plan on pull requests
+# - Deployment: Terraform apply on main branch (manual approval required)
+#
+# Triggers:
+# - Pull Request: Runs validation, security, policy tests, and plan
+# - Push to main: Runs full pipeline including unit tests and apply
+# - Manual: workflow_dispatch for on-demand execution
+#
+# Required Secrets:
+# - AWS_ACCESS_KEY_ID: AWS access key for deployment
+# - AWS_SECRET_ACCESS_KEY: AWS secret key for deployment
+#
+# Environment:
+# - production: Manual approval required for apply
+# ============================================================================
+
+name: Terraform CI/CD
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  TF_VERSION: 1.6.0  # Updated to match required version (native S3 state locking)
+  AWS_REGION: ap-southeast-2
+  GO_VERSION: '1.21'
+
+jobs:
+  # ============================================================================
+  # Validation Job - Terraform Format and Syntax Validation
+  # ============================================================================
+  validate:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init (Backend Disabled)
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Validate Examples
+        run: |
+          echo "Validating examples..."
+          for example in examples/*/; do
+            echo "Validating $example"
+            cd "$example"
+            terraform init -backend=false
+            terraform validate
+            cd ../..
+          done
+
+  # ============================================================================
+  # Security Scan Job - tfsec and Checkov
+  # ============================================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          soft_fail: true
+          additional_args: --minimum-severity MEDIUM
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: terraform
+          soft_fail: true
+          skip_check: CKV_AWS_18,CKV_AWS_19  # Skip S3 logging checks (handled separately)
+
+  # ============================================================================
+  # OPA Policy Tests Job - Policy Validation
+  # ============================================================================
+  opa-tests:
+    name: OPA Policy Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+
+      - name: Run OPA Tests
+        run: |
+          echo "Running OPA policy tests..."
+          cd policies/opa
+          
+          # Run all test files
+          opa test . -v
+          
+          echo "✓ OPA policy tests passed"
+
+      - name: Validate OPA Policies Syntax
+        run: |
+          echo "Validating OPA policy syntax..."
+          cd policies/opa
+          
+          # Check syntax of all .rego files
+          for file in *.rego; do
+            if [[ "$file" != *.backup ]]; then
+              echo "Checking $file..."
+              opa check "$file"
+            fi
+          done
+          
+          echo "✓ OPA policy syntax validation passed"
+
+  # ============================================================================
+  # TFLint Job - Terraform Linting
+  # ============================================================================
+  tflint:
+    name: TFLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Init TFLint
+        run: tflint --init
+
+      - name: Run TFLint
+        run: tflint --recursive --minimum-failure-severity=warning
+
+  # ============================================================================
+  # Unit Tests Job - Terratest (Main Branch Only)
+  # ============================================================================
+  unit-tests:
+    name: Terratest Unit Tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download Go Dependencies
+        working-directory: tests/terraform
+        run: |
+          go mod download
+          go mod tidy
+
+      - name: Run Terratest
+        working-directory: tests/terraform
+        run: go test -v -timeout 30m
+        continue-on-error: true  # Don't fail pipeline if tests fail
+
+  # ============================================================================
+  # Terraform Plan Job - Generate Plan on Pull Requests
+  # ============================================================================
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: [validate, security-scan, opa-tests, tflint]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -out=tfplan
+        continue-on-error: true
+
+      - name: Comment PR with Plan
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Plan 📖
+            
+            <details><summary>Show Plan</summary>
+            
+            \`\`\`terraform
+            ${{ steps.plan.outputs.stdout }}
+            \`\`\`
+            
+            </details>
+            
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+  # ============================================================================
+  # Terraform Apply Job - Deploy on Main Branch (Manual Approval)
+  # ============================================================================
+  apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: [validate, security-scan, opa-tests, tflint, unit-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production  # Requires manual approval in GitHub
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+      - name: Post-Deployment Script
+        run: |
+          chmod +x scripts/post-deployment.sh
+          ./scripts/post-deployment.sh

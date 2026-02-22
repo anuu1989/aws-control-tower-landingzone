@@ -1,0 +1,31 @@
+# ============================================================================
+# Terraform Backend Configuration Example
+# ============================================================================
+# Copy this file to terraform.tfvars and customize for your environment
+# ============================================================================
+
+project_name     = "control-tower"
+environment      = "production"
+region           = "ap-southeast-2"
+
+# S3 bucket name must be globally unique
+state_bucket_name = "your-org-control-tower-terraform-state"
+
+# Note: No DynamoDB table needed with Terraform 1.6+
+# Native S3 state locking is used instead
+
+# AWS account IDs allowed to access the state
+allowed_account_ids = [
+  "arn:aws:iam::123456789012:root"  # Management account
+]
+
+# Retention settings
+state_retention_days = 90   # Keep old state versions for 90 days
+logs_retention_days  = 365  # Keep access logs for 1 year
+
+# Monitoring
+state_bucket_size_threshold = 10737418240  # 10 GB
+alarm_sns_topic_arn         = ""           # Optional: SNS topic for alarms
+
+# KMS settings
+kms_deletion_window = 30  # Days before KMS key is deleted

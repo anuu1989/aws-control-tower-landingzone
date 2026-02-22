@@ -1,0 +1,101 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.5.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.log_archive",
+          "type": "aws_s3_bucket",
+          "name": "log_archive",
+          "values": {
+            "bucket": "control-tower-logs-123456789012",
+            "tags": {
+              "Environment": "production",
+              "ManagedBy": "terraform",
+              "Project": "control-tower"
+            }
+          }
+        },
+        {
+          "address": "aws_s3_bucket_server_side_encryption_configuration.log_archive",
+          "type": "aws_s3_bucket_server_side_encryption_configuration",
+          "name": "log_archive",
+          "values": {
+            "bucket": "aws_s3_bucket.log_archive"
+          }
+        },
+        {
+          "address": "aws_s3_bucket_public_access_block.log_archive",
+          "type": "aws_s3_bucket_public_access_block",
+          "name": "log_archive",
+          "values": {
+            "bucket": "aws_s3_bucket.log_archive",
+            "block_public_acls": true,
+            "block_public_policy": true,
+            "ignore_public_acls": true,
+            "restrict_public_buckets": true
+          }
+        },
+        {
+          "address": "aws_cloudtrail.organization",
+          "type": "aws_cloudtrail",
+          "name": "organization",
+          "values": {
+            "name": "organization-trail",
+            "enable_log_file_validation": true,
+            "is_multi_region_trail": true,
+            "include_global_service_events": true,
+            "tags": {
+              "Environment": "production",
+              "ManagedBy": "terraform",
+              "Project": "control-tower"
+            }
+          }
+        },
+        {
+          "address": "aws_guardduty_detector.main",
+          "type": "aws_guardduty_detector",
+          "name": "main",
+          "values": {
+            "enable": true,
+            "finding_publishing_frequency": "FIFTEEN_MINUTES",
+            "tags": {
+              "Environment": "production",
+              "ManagedBy": "terraform",
+              "Project": "control-tower"
+            }
+          }
+        },
+        {
+          "address": "aws_config_configuration_recorder.main",
+          "type": "aws_config_configuration_recorder",
+          "name": "main",
+          "values": {
+            "name": "control-tower-recorder",
+            "recording_group": [
+              {
+                "all_supported": true,
+                "include_global_resource_types": true
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_kms_key.control_tower",
+          "type": "aws_kms_key",
+          "name": "control_tower",
+          "values": {
+            "description": "Control Tower encryption key",
+            "enable_key_rotation": true,
+            "tags": {
+              "Environment": "production",
+              "ManagedBy": "terraform",
+              "Project": "control-tower"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

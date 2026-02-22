@@ -1,0 +1,66 @@
+#!/bin/bash
+set -e
+
+# ============================================================================
+# Post-Deployment Configuration Script for AWS Control Tower
+# ============================================================================
+
+echo "=========================================="
+echo "Control Tower Post-Deployment Setup"
+echo "=========================================="
+echo ""
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${GREEN}Control Tower deployment complete!${NC}"
+echo ""
+echo "Post-deployment checklist:"
+echo ""
+echo "1. AWS SSO/Identity Center Configuration"
+echo "   - Navigate to AWS SSO in the console"
+echo "   - Configure identity source (AWS SSO directory or external IdP)"
+echo "   - Create permission sets"
+echo "   - Assign users/groups to accounts"
+echo ""
+echo "2. Enable Security Services"
+echo "   - Enable GuardDuty in all regions"
+echo "   - Enable Security Hub with CIS AWS Foundations Benchmark"
+echo "   - Enable AWS Config in all regions"
+echo "   - Configure Config aggregator"
+echo ""
+echo "3. CloudTrail Configuration"
+echo "   - Verify organization trail is enabled"
+echo "   - Ensure logs are encrypted with KMS"
+echo "   - Configure log file validation"
+echo "   - Set up CloudWatch Logs integration"
+echo ""
+echo "4. Account Factory Setup"
+echo "   - Configure Account Factory in Service Catalog"
+echo "   - Define account baselines"
+echo "   - Create account provisioning templates"
+echo ""
+echo "5. Compliance and Monitoring"
+echo "   - Review SCP policies in Organizations console"
+echo "   - Set up CloudWatch dashboards"
+echo "   - Configure SNS notifications"
+echo "   - Enable AWS Backup for account backups"
+echo ""
+echo "6. Network Configuration"
+echo "   - Set up Transit Gateway (if needed)"
+echo "   - Configure VPC sharing"
+echo "   - Implement network segmentation"
+echo ""
+echo "7. Cost Management"
+echo "   - Enable Cost Explorer"
+echo "   - Set up budgets and alerts"
+echo "   - Configure cost allocation tags"
+echo "   - Review Reserved Instance recommendations"
+echo ""
+echo "8. Documentation"
+echo "   - Document account structure"
+echo "   - Create runbooks for common operations"
+echo "   - Update architecture diagrams"
+echo ""
+echo -e "${YELLOW}For detailed instructions, see docs/POST_DEPLOYMENT.md${NC}"

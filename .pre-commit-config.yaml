@@ -1,0 +1,167 @@
+# ============================================================================
+# Pre-Commit Hooks Configuration
+# ============================================================================
+# This file configures pre-commit hooks to automatically validate code before
+# commits, ensuring code quality, security, and consistency.
+#
+# Installation:
+#   pip install pre-commit
+#   pre-commit install
+#
+# Usage:
+#   pre-commit run --all-files  # Run on all files
+#   pre-commit run              # Run on staged files
+#   git commit                  # Hooks run automatically
+#
+# Skip hooks (emergency only):
+#   git commit --no-verify
+#
+# ============================================================================
+
+repos:
+  # ============================================================================
+  # General Pre-Commit Hooks
+  # ============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Prevent committing large files
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+        
+      # Ensure files end with newline
+      - id: end-of-file-fixer
+        
+      # Remove trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        
+      # Check for merge conflicts
+      - id: check-merge-conflict
+        
+      # Check YAML syntax
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        
+      # Check JSON syntax
+      - id: check-json
+        
+      # Detect private keys
+      - id: detect-private-key
+        
+      # Check for AWS credentials
+      - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
+        
+      # Prevent committing to main/master
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]
+
+  # ============================================================================
+  # Terraform Hooks
+  # ============================================================================
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.88.0
+    hooks:
+      # Format Terraform files
+      - id: terraform_fmt
+        
+      # Validate Terraform syntax
+      - id: terraform_validate
+        
+      # Generate documentation
+      - id: terraform_docs
+        args:
+          - --hook-config=--path-to-file=README.md
+          - --hook-config=--add-to-existing-file=true
+          - --hook-config=--create-file-if-not-exist=true
+        
+      # Run tfsec security scanner
+      - id: terraform_tfsec
+        args:
+          - --args=--minimum-severity=MEDIUM
+          - --args=--exclude-downloaded-modules
+        
+      # Run TFLint
+      - id: terraform_tflint
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+          
+      # Check for Terraform provider version constraints
+      - id: terraform_providers_lock
+        args:
+          - --hook-config=--mode=always-regenerate-lockfile
+
+  # ============================================================================
+  # Security Scanning
+  # ============================================================================
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      # Detect secrets in code
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package.lock.json
+
+  # ============================================================================
+  # Checkov - Policy as Code
+  # ============================================================================
+  - repo: https://github.com/bridgecrewio/checkov
+    rev: 3.2.0
+    hooks:
+      - id: checkov
+        args:
+          - --quiet
+          - --framework=terraform
+          - --skip-check=CKV_AWS_18,CKV_AWS_19  # Skip S3 logging checks
+          - --compact
+
+  # ============================================================================
+  # Markdown Linting
+  # ============================================================================
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+
+  # ============================================================================
+  # YAML Linting
+  # ============================================================================
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--format, parsable, --strict]
+
+  # ============================================================================
+  # Shell Script Linting
+  # ============================================================================
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
+# ============================================================================
+# Configuration
+# ============================================================================
+default_language_version:
+  python: python3.11
+
+# Files to exclude from all hooks
+exclude: |
+  (?x)^(
+    \.terraform/.*|
+    \.git/.*|
+    backups/.*|
+    .*\.backup$|
+    .*\.tfstate$|
+    .*\.tfstate\..*$
+  )$
+
+# Fail fast - stop on first failure
+fail_fast: false
+
+# Minimum pre-commit version
+minimum_pre_commit_version: '3.0.0'

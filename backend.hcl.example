@@ -1,0 +1,31 @@
+# ============================================================================
+# Terraform Backend Configuration
+# ============================================================================
+# This file configures the S3 backend for Terraform state storage
+# Terraform 1.6+ uses native S3 state locking (no DynamoDB required!)
+# Copy this file to backend.hcl and customize with your values
+# ============================================================================
+
+# S3 bucket for state storage (created by backend module)
+bucket = "your-org-control-tower-terraform-state"
+
+# Path to state file within the bucket
+key = "control-tower/terraform.tfstate"
+
+# AWS region where backend resources are located
+region = "ap-southeast-2"
+
+# Enable encryption
+encrypt = true
+
+# KMS key for encryption (output from backend module deployment)
+kms_key_id = "arn:aws:kms:ap-southeast-2:123456789012:key/12345678-1234-1234-1234-123456789012"
+
+# ============================================================================
+# Note: No DynamoDB table needed with Terraform 1.6+!
+# State locking is handled natively by S3 conditional writes
+# ============================================================================
+
+# Usage:
+# terraform init -backend-config=backend.hcl
+# ============================================================================

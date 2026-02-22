@@ -1,0 +1,277 @@
+# ============================================================================
+# Production Environment Configuration
+# ============================================================================
+
+environment  = "production"
+project_name = "enterprise-control-tower"
+repository_url = "https://github.com/your-org/control-tower-infrastructure"
+
+# Default tags applied to all resources
+default_tags = {
+  Owner       = "Platform Team"
+  CostCenter  = "Infrastructure"
+  Compliance  = "SOC2"
+  DataClass   = "Confidential"
+  Terraform   = "true"
+}
+
+# ============================================================================
+# Control Tower Configuration
+# ============================================================================
+
+home_region      = "ap-southeast-2"
+governed_regions = [
+  "ap-southeast-2", # Sydney - Primary
+  "ap-southeast-1", # Singapore - DR
+  "us-east-1"       # Global services (required)
+]
+landing_zone_version = "3.3"
+
+# ============================================================================
+# Organizational Units
+# ============================================================================
+
+organizational_units = {
+  security = {
+    name        = "Security"
+    environment = "security"
+    tags = {
+      Purpose = "Security and Audit Accounts"
+    }
+  }
+  infrastructure = {
+    name        = "Infrastructure"
+    environment = "infrastructure"
+    tags = {
+      Purpose = "Shared Infrastructure Services"
+    }
+  }
+  development = {
+    name        = "Development"
+    environment = "dev"
+    tags = {
+      Purpose     = "Development Workloads"
+      CostCenter  = "Engineering"
+    }
+  }
+  testing = {
+    name        = "Testing"
+    environment = "test"
+    tags = {
+      Purpose     = "QA and Testing"
+      CostCenter  = "Engineering"
+    }
+  }
+  staging = {
+    name        = "Staging"
+    environment = "staging"
+    tags = {
+      Purpose     = "Pre-Production"
+      CostCenter  = "Engineering"
+    }
+  }
+  production = {
+    name        = "Production"
+    environment = "prod"
+    tags = {
+      Purpose     = "Production Workloads"
+      CostCenter  = "Operations"
+      Criticality = "High"
+    }
+  }
+}
+
+# ============================================================================
+# Service Control Policies
+# ============================================================================
+
+allowed_regions = [
+  "ap-southeast-2",
+  "ap-southeast-1",
+  "us-east-1"
+]
+
+allowed_instance_types_nonprod = [
+  "t3.*",
+  "t3a.*",
+  "t4g.*",
+  "m5.*",
+  "m5a.*"
+]
+
+enabled_scp_policies = [
+  # Core Security (Always Enabled)
+  "deny_root_user",
+  "require_mfa",
+  "restrict_regions",
+  "deny_leave_org",
+  
+  # Logging and Monitoring Protection
+  "protect_cloudtrail",
+  "protect_security_services",
+  
+  # Encryption Requirements
+  "require_encryption",
+  "deny_unencrypted_rds",
+  "deny_unencrypted_snapshots",
+  "require_kms_encryption",
+  "deny_unencrypted_secrets",
+  "deny_unencrypted_elasticache",
+  
+  # S3 Security
+  "deny_public_s3",
+  "deny_s3_public_access",
+  "require_s3_ssl",
+  
+  # EC2 Security
+  "restrict_instance_types",
+  "require_imdsv2",
+  "deny_public_ami",
+  
+  # Network Security
+  "deny_default_vpc",
+  
+  # IAM Security
+  "deny_iam_user_creation",
+  "require_iam_password_policy",
+  
+  # KMS Security
+  "deny_kms_key_deletion",
+  
+  # Database Security
+  "deny_public_rds",
+  "require_rds_backup",
+  
+  # Additional Services
+  "require_elb_logging",
+  "require_tagging"
+]
+
+# Root-level policies (apply to ALL accounts)
+root_scp_policies = [
+  "deny_root_user",
+  "deny_leave_org",
+  "protect_cloudtrail",
+  "protect_security_services",
+  "restrict_regions",
+  "require_encryption"
+]
+
+# OU-specific policies
+ou_scp_policies = {
+  security = [
+    "require_mfa"
+  ]
+  infrastructure = [
+    "require_mfa"
+  ]
+  development = [
+    "require_mfa",
+    "deny_public_s3",
+    "restrict_instance_types"
+  ]
+  testing = [
+    "require_mfa",
+    "deny_public_s3",
+    "restrict_instance_types"
+  ]
+  staging = [
+    "require_mfa",
+    "deny_public_s3"
+  ]
+  production = [
+    "require_mfa"
+  ]
+}
+
+# ============================================================================
+# Monitoring and Notifications
+# ============================================================================
+
+# ============================================================================
+# Monitoring and Notifications
+# ============================================================================
+
+security_notification_emails = [
+  "security-team@example.com",
+  "soc@example.com"
+]
+
+operational_notification_emails = [
+  "platform-team@example.com",
+  "cloud-ops@example.com"
+]
+
+log_retention_days        = 2555  # 7 years for compliance
+log_transition_days       = 90    # Move to Glacier after 90 days
+log_deep_archive_days     = 365   # Move to Deep Archive after 1 year
+cloudwatch_retention_days = 365   # 1 year for CloudWatch Logs
+
+# CloudWatch Alarm Thresholds
+unauthorized_api_threshold       = 5
+iam_changes_threshold            = 1
+signin_failures_threshold        = 3
+vpc_changes_threshold            = 1
+security_group_changes_threshold = 5
+
+# ============================================================================
+# Security and Compliance
+# ============================================================================
+
+kms_alias           = "control-tower"
+kms_deletion_window = 30
+kms_multi_region    = false
+
+guardduty_finding_frequency = "FIFTEEN_MINUTES"
+enable_pci_dss              = false  # Set to true if PCI DSS compliance required
+config_delivery_frequency   = "TwentyFour_Hours"
+enable_macie                = false  # Set to true for sensitive data discovery
+macie_finding_frequency     = "FIFTEEN_MINUTES"
+
+# ============================================================================
+# Networking Configuration
+# ============================================================================
+
+enable_centralized_networking = true
+
+inspection_vpc_cidr = "10.0.0.0/16"
+
+network_availability_zones = [
+  "ap-southeast-2a",
+  "ap-southeast-2b",
+  "ap-southeast-2c"
+]
+
+transit_gateway_asn = 64512
+
+# Network Firewall Domain Lists
+network_firewall_allowed_domains = [
+  ".github.com",
+  ".gitlab.com",
+  ".docker.com",
+  ".dockerhub.com",
+  ".npmjs.org",
+  ".pypi.org",
+  ".maven.org",
+  ".nuget.org",
+  ".rubygems.org"
+]
+
+network_firewall_denied_domains = [
+  # Add known malicious domains here
+]
+
+# DNS Firewall Configuration
+dns_firewall_blocked_domains = [
+  # Add domains to block at DNS level
+]
+
+dns_firewall_allowed_domains = [
+  "*.amazonaws.com",
+  "*.aws.amazon.com",
+  "*.cloudfront.net"
+]
+
+# Network Monitoring Thresholds
+nat_gateway_bandwidth_threshold  = 10737418240  # 10 GB
+firewall_packet_drop_threshold   = 1000

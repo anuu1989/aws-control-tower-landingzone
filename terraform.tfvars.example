@@ -1,0 +1,66 @@
+# Copy this file to terraform.tfvars and customize
+
+home_region      = "ap-southeast-2"
+governed_regions = ["ap-southeast-2", "us-east-1"]
+
+organizational_units = {
+  nonprod = {
+    name        = "NonProd"
+    environment = "non-prod"
+    tags        = {}
+  }
+  prod = {
+    name        = "Prod"
+    environment = "prod"
+    tags        = {}
+  }
+}
+
+allowed_regions = [
+  "ap-southeast-2", # Sydney
+  "us-east-1"       # Global services
+]
+
+allowed_instance_types_nonprod = ["t3.*", "t3a.*", "t4g.*"]
+
+# Customize which SCPs to enable
+enabled_scp_policies = [
+  "deny_root_user",
+  "require_mfa",
+  "restrict_regions",
+  "deny_leave_org",
+  "protect_cloudtrail",
+  "protect_security_services",
+  "require_encryption",
+  "deny_public_s3",
+  "restrict_instance_types"
+]
+
+# Customize SCP attachments per OU
+root_scp_policies = [
+  "deny_root_user",
+  "deny_leave_org",
+  "protect_cloudtrail",
+  "protect_security_services",
+  "restrict_regions",
+  "require_encryption"
+]
+
+ou_scp_policies = {
+  nonprod = [
+    "require_mfa",
+    "deny_public_s3",
+    "restrict_instance_types"
+  ]
+  prod = [
+    "require_mfa"
+  ]
+  # Add more OUs here as needed:
+  # sandbox = [
+  #   "require_mfa",
+  #   "restrict_instance_types"
+  # ]
+  # dev = [
+  #   "require_mfa"
+  # ]
+}
