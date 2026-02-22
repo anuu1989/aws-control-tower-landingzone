@@ -1,0 +1,138 @@
+/* Custom styles for AWS Control Tower documentation */
+
+/* Color scheme */
+:root {
+  --aws-orange: #FF9900;
+  --aws-dark: #232F3E;
+  --success-green: #28a745;
+  --warning-yellow: #ffc107;
+  --danger-red: #dc3545;
+  --info-blue: #17a2b8;
+}
+
+/* Custom callout boxes */
+.callout {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-left: 4px solid;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.callout-success {
+  border-color: var(--success-green);
+  background-color: #d4edda;
+}
+
+.callout-warning {
+  border-color: var(--warning-yellow);
+  background-color: #fff3cd;
+}
+
+.callout-danger {
+  border-color: var(--danger-red);
+  background-color: #f8d7da;
+}
+
+.callout-info {
+  border-color: var(--info-blue);
+  background-color: #d1ecf1;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+
+.status-complete {
+  color: #fff;
+  background-color: var(--success-green);
+}
+
+.status-partial {
+  color: #000;
+  background-color: var(--warning-yellow);
+}
+
+.status-pending {
+  color: #fff;
+  background-color: #6c757d;
+}
+
+/* Feature grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.feature-card {
+  padding: 1.5rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background-color: #fff;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.feature-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.feature-description {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+/* Architecture diagram styling */
+.architecture-diagram {
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+
+.architecture-diagram pre {
+  background-color: transparent;
+  border: none;
+  margin: 0;
+}
+
+/* Button enhancements */
+.btn-primary {
+  background-color: var(--aws-orange) !important;
+  border-color: var(--aws-orange) !important;
+}
+
+.btn-primary:hover {
+  background-color: #e68a00 !important;
+  border-color: #e68a00 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
