@@ -8,8 +8,8 @@
 # Site settings
 title: AWS Control Tower Landing Zone
 description: Enterprise-grade Terraform automation for AWS Control Tower with comprehensive governance, security, and compliance controls
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site
+baseurl: "/aws-control-tower-landingzone" # the subpath of your site, e.g. /blog
+url: "https://anuu1989.github.io"# the base hostname & protocol for your site
 
 # Theme
 theme: just-the-docs
