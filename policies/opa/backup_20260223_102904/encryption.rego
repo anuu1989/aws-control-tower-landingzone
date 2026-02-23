@@ -11,7 +11,7 @@ import data.terraform.controltower.helpers
 # ============================================================================
 
 # POLICY: KMS keys must have rotation enabled
-deny contains msg if {
+deny[msg] {
     kms_key := helpers.resources_by_type("aws_kms_key")[_]
     not kms_key.values.enable_key_rotation
     msg := sprintf("KMS key '%s' must have automatic key rotation enabled", [kms_key.address])
@@ -22,13 +22,13 @@ deny contains msg if {
 # ============================================================================
 
 # POLICY: All S3 buckets must have encryption enabled
-deny contains msg if {
+deny[msg] {
     bucket := helpers.resources_by_type("aws_s3_bucket")[_]
     not has_bucket_encryption(bucket.address)
     msg := sprintf("S3 bucket '%s' must have encryption enabled", [bucket.address])
 }
 
-has_bucket_encryption(bucket_address) if {
+has_bucket_encryption(bucket_address) {
     encryption := helpers.resources_by_type("aws_s3_bucket_server_side_encryption_configuration")[_]
     contains(encryption.values.bucket, bucket_address)
 }
@@ -38,7 +38,7 @@ has_bucket_encryption(bucket_address) if {
 # ============================================================================
 
 # POLICY: All EBS volumes must be encrypted
-deny contains msg if {
+deny[msg] {
     volume := helpers.resources_by_type("aws_ebs_volume")[_]
     not volume.values.encrypted
     msg := sprintf("EBS volume '%s' must be encrypted", [volume.address])
@@ -49,7 +49,7 @@ deny contains msg if {
 # ============================================================================
 
 # POLICY: All RDS instances must be encrypted
-deny contains msg if {
+deny[msg] {
     rds := helpers.resources_by_type("aws_db_instance")[_]
     not rds.values.storage_encrypted
     msg := sprintf("RDS instance '%s' must have storage encryption enabled", [rds.address])
@@ -60,14 +60,14 @@ deny contains msg if {
 # ============================================================================
 
 # POLICY: ElastiCache must have encryption at rest
-deny contains msg if {
+deny[msg] {
     cache := helpers.resources_by_type("aws_elasticache_replication_group")[_]
     not cache.values.at_rest_encryption_enabled
     msg := sprintf("ElastiCache replication group '%s' must have encryption at rest enabled", [cache.address])
 }
 
 # POLICY: ElastiCache must have encryption in transit
-deny contains msg if {
+deny[msg] {
     cache := helpers.resources_by_type("aws_elasticache_replication_group")[_]
     not cache.values.transit_encryption_enabled
     msg := sprintf("ElastiCache replication group '%s' must have encryption in transit enabled", [cache.address])
@@ -78,20 +78,20 @@ deny contains msg if {
 # ============================================================================
 
 # POLICY: Secrets must have KMS encryption
-deny contains msg if {
+deny[msg] {
     secret := helpers.resources_by_type("aws_secretsmanager_secret")[_]
     not secret.values.kms_key_id
     msg := sprintf("Secrets Manager secret '%s' must use KMS encryption", [secret.address])
 }
 
 # POLICY: Secrets must have rotation enabled
-warn contains msg if {
+warn[msg] {
     secret := helpers.resources_by_type("aws_secretsmanager_secret")[_]
     not has_rotation_config(secret.address)
     msg := sprintf("Secrets Manager secret '%s' should have automatic rotation enabled", [secret.address])
 }
 
-has_rotation_config(secret_address) if {
+has_rotation_config(secret_address) {
     rotation := helpers.resources_by_type("aws_secretsmanager_secret_rotation")[_]
     contains(rotation.values.secret_id, secret_address)
 }

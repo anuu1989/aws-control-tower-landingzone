@@ -11,27 +11,27 @@ import data.terraform.controltower.helpers
 # ============================================================================
 
 # POLICY: CloudTrail must be enabled
-deny contains msg if {
+deny[msg] {
     count(helpers.resources_by_type("aws_cloudtrail")) == 0
     msg := "At least one CloudTrail must be configured"
 }
 
 # POLICY: CloudTrail must have log file validation enabled
-deny contains msg if {
+deny[msg] {
     trail := helpers.resources_by_type("aws_cloudtrail")[_]
     not trail.values.enable_log_file_validation
     msg := sprintf("CloudTrail '%s' must have log file validation enabled", [trail.address])
 }
 
 # POLICY: CloudTrail must be multi-region
-deny contains msg if {
+deny[msg] {
     trail := helpers.resources_by_type("aws_cloudtrail")[_]
     not trail.values.is_multi_region_trail
     msg := sprintf("CloudTrail '%s' must be configured as multi-region", [trail.address])
 }
 
 # POLICY: CloudTrail must include global service events
-deny contains msg if {
+deny[msg] {
     trail := helpers.resources_by_type("aws_cloudtrail")[_]
     not trail.values.include_global_service_events
     msg := sprintf("CloudTrail '%s' must include global service events", [trail.address])
@@ -42,13 +42,13 @@ deny contains msg if {
 # ============================================================================
 
 # POLICY: GuardDuty must be enabled
-deny contains msg if {
+deny[msg] {
     count(helpers.resources_by_type("aws_guardduty_detector")) == 0
     msg := "GuardDuty detector must be enabled"
 }
 
 # POLICY: GuardDuty must be enabled (not disabled)
-deny contains msg if {
+deny[msg] {
     detector := helpers.resources_by_type("aws_guardduty_detector")[_]
     not detector.values.enable
     msg := sprintf("GuardDuty detector '%s' must be enabled", [detector.address])
@@ -59,13 +59,13 @@ deny contains msg if {
 # ============================================================================
 
 # POLICY: Security Hub must be enabled
-warn contains msg if {
+warn[msg] {
     count(helpers.resources_by_type("aws_securityhub_account")) == 0
     msg := "Security Hub should be enabled"
 }
 
 # POLICY: Security Hub standards must be enabled
-warn contains msg if {
+warn[msg] {
     count(helpers.resources_by_type("aws_securityhub_standards_subscription")) == 0
     msg := "At least one Security Hub standard should be enabled"
 }
@@ -75,15 +75,14 @@ warn contains msg if {
 # ============================================================================
 
 # POLICY: AWS Config must be enabled
-deny contains msg if {
+deny[msg] {
     count(helpers.resources_by_type("aws_config_configuration_recorder")) == 0
     msg := "AWS Config configuration recorder must be enabled"
 }
 
 # POLICY: Config recorder must record all resources
-deny contains msg if {
+deny[msg] {
     recorder := helpers.resources_by_type("aws_config_configuration_recorder")[_]
-    recording_group := recorder.values.recording_group[_]
-    not recording_group.all_supported
+    not recorder.values.recording_group[_].all_supported
     msg := sprintf("Config recorder '%s' must record all supported resources", [recorder.address])
 }

@@ -11,7 +11,7 @@ import data.terraform.controltower.helpers
 # ============================================================================
 
 # POLICY: IAM policies must not allow full admin access
-deny contains msg if {
+deny[msg] {
     policy := helpers.resources_by_type("aws_iam_policy")[_]
     statement := policy.values.policy.Statement[_]
     statement.Effect == "Allow"
@@ -25,7 +25,7 @@ deny contains msg if {
 # ============================================================================
 
 # POLICY: IAM roles must have assume role policy
-deny contains msg if {
+deny[msg] {
     role := helpers.resources_by_type("aws_iam_role")[_]
     not role.values.assume_role_policy
     msg := sprintf("IAM role '%s' must have an assume role policy", [role.address])

@@ -34,19 +34,19 @@ all_resources := array.concat(
 # ============================================================================
 
 # Check if resource has required tags
-has_required_tags(resource, required_tags) if {
+has_required_tags(resource, required_tags) {
     resource.values.tags
     missing := [tag | tag := required_tags[_]; not resource.values.tags[tag]]
     count(missing) == 0
 }
 
 # Get missing tags for a resource
-missing_tags(resource, required_tags) := missing if {
+missing_tags(resource, required_tags) := missing {
     resource.values.tags
     missing := [tag | tag := required_tags[_]; not resource.values.tags[tag]]
 }
 
-missing_tags(resource, required_tags) := required_tags if {
+missing_tags(resource, required_tags) := required_tags {
     not resource.values.tags
 }
 
@@ -55,11 +55,11 @@ missing_tags(resource, required_tags) := required_tags if {
 # ============================================================================
 
 # Check if resource is in production environment
-is_production(resource) if {
+is_production(resource) {
     contains(lower(resource.values.tags.Environment), "prod")
 }
 
-is_production(resource) if {
+is_production(resource) {
     contains(lower(resource.address), "prod")
 }
 
@@ -67,4 +67,7 @@ is_production(resource) if {
 # String Helpers
 # ============================================================================
 
-# Note: Using built-in lower() function from Rego
+# Convert to lowercase
+lower(str) := lower_str {
+    lower_str := lower(str)
+}

@@ -1,7 +1,7 @@
 # OPA S3 Security Policy Tests
 package terraform.controltower.s3
 
-test_s3_public_access_block_required if {
+test_s3_public_access_block_required {
     deny["S3 bucket 'aws_s3_bucket.test' must have public access blocked"] with input as {
         "planned_values": {
             "root_module": {
@@ -17,8 +17,8 @@ test_s3_public_access_block_required if {
     }
 }
 
-test_s3_with_public_access_block_passes if {
-    count(deny) == 0 with input as {
+test_s3_with_public_access_block_passes {
+    not deny[_] with input as {
         "planned_values": {
             "root_module": {
                 "resources": [

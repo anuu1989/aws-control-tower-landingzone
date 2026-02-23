@@ -11,13 +11,13 @@ import data.terraform.controltower.helpers
 # ============================================================================
 
 # POLICY: VPCs must have flow logs enabled
-warn contains msg if {
+warn[msg] {
     vpc := helpers.resources_by_type("aws_vpc")[_]
     not has_flow_logs(vpc.values.id)
     msg := sprintf("VPC '%s' should have flow logs enabled", [vpc.address])
 }
 
-has_flow_logs(vpc_id) if {
+has_flow_logs(vpc_id) {
     flow_log := helpers.resources_by_type("aws_flow_log")[_]
     flow_log.values.vpc_id == vpc_id
 }
@@ -27,7 +27,7 @@ has_flow_logs(vpc_id) if {
 # ============================================================================
 
 # POLICY: Security groups must not allow unrestricted ingress
-deny contains msg if {
+deny[msg] {
     sg := helpers.resources_by_type("aws_security_group")[_]
     rule := sg.values.ingress[_]
     rule.cidr_blocks[_] == "0.0.0.0/0"
@@ -37,7 +37,7 @@ deny contains msg if {
 }
 
 # POLICY: Security groups must not allow SSH from anywhere
-deny contains msg if {
+deny[msg] {
     sg := helpers.resources_by_type("aws_security_group")[_]
     rule := sg.values.ingress[_]
     rule.cidr_blocks[_] == "0.0.0.0/0"
@@ -46,7 +46,7 @@ deny contains msg if {
 }
 
 # POLICY: Security groups must not allow RDP from anywhere
-deny contains msg if {
+deny[msg] {
     sg := helpers.resources_by_type("aws_security_group")[_]
     rule := sg.values.ingress[_]
     rule.cidr_blocks[_] == "0.0.0.0/0"

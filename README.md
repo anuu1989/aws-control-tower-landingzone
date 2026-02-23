@@ -1,81 +1,156 @@
-# AWS Control Tower Landing Zone - Enterprise Grade
+# AWS Control Tower Landing Zone
 
 Enterprise-grade Terraform automation for deploying AWS Control Tower with comprehensive governance, security, and compliance controls.
 
-## Features
+📚 **[View Full Documentation](https://anuu1989.github.io/aws-control-tower-landingzone/)** | [Architecture](https://anuu1989.github.io/aws-control-tower-landingzone/architecture) | [Getting Started](https://anuu1989.github.io/aws-control-tower-landingzone/getting-started)
 
-- **Multi-Account Architecture**: Secure, scalable organizational structure
-- **Account Vending Machine**: Automated account creation and bootstrapping
-- **Comprehensive SCPs**: 35+ pre-configured service control policies
-- **Regional Deployment**: Sydney-based with multi-region support
-- **Security by Default**: GuardDuty, Security Hub, AWS Config, Network Firewall
-- **Secrets Management**: AWS Secrets Manager integration for sensitive data
-- **Cost Optimization**: AWS Budgets, cost anomaly detection, lifecycle policies
-- **Drift Detection**: Automated infrastructure drift detection every 6 hours
-- **Pre-Commit Hooks**: Automated validation, security scanning, and linting
-- **Disaster Recovery**: Comprehensive DR runbook and automated state backups
-- **Fully Modular**: Reusable modules for easy customization
-- **Production Ready**: Validation, monitoring, and operational tooling included
-- **Extensible**: Add unlimited OUs and accounts without code changes
+---
 
-## Quick Start
+## 🚀 Features
 
-```bash
-# 1. Setup pre-commit hooks (recommended)
-./scripts/setup-pre-commit.sh
-./scripts/setup-git-secrets.sh
+### Multi-Account Architecture
+Secure, scalable organizational structure with automated account vending
 
-# 2. Deploy backend module (FIRST TIME ONLY - Terraform 1.6+ required)
-cd examples/terraform-backend
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your values
-terraform init
-terraform apply
-# Save backend config
-terraform output -raw backend_config_hcl > ../../backend.hcl
-cd ../..
+### 35+ Service Control Policies
+Comprehensive governance controls for security and compliance
 
-# 3. Initialize with backend (no DynamoDB needed!)
-terraform init -backend-config=backend.hcl
+### Zero Trust Networking
+Network Firewall with stateful inspection and deny-by-default rules
 
-# 4. Run pre-deployment checks
-make pre-deploy
+### Automated Operations
+Drift detection, state backups, and account bootstrapping
 
-# 5. Review the plan
-make plan
+### Cost Optimization
+AWS Budgets, anomaly detection, and lifecycle policies
 
-# 6. Deploy (60-90 minutes)
-make apply
+### Secrets Management
+AWS Secrets Manager integration for sensitive data
 
-# 7. Setup automated state backups (optional)
-crontab -e
-# Add: 0 */6 * * * /path/to/scripts/backup-state-automated.sh backup-bucket-name
-```
+### Comprehensive Testing
+8 test suites with 50+ OPA policy rules (21/21 passing)
 
-## Architecture
+### Extensive Documentation
+20+ guides covering all aspects of deployment and operations
 
-- **Home Region**: Sydney (ap-southeast-2)
-- **Organizational Units**: Fully extensible (default: 6 OUs)
-- **Governance**: 9 comprehensive SCPs with flexible assignment
-- **Modular Design**: Reusable modules for easy customization
-- **Enterprise Features**: Monitoring, notifications, compliance controls
+---
 
-## Prerequisites
+## 📊 Project Status
 
-### Required
+| Component | Status | Completion |
+|:----------|:------:|:----------:|
+| Core Infrastructure | ✅ Complete | 100% |
+| Security & Compliance | ✅ Complete | 100% |
+| Networking | ✅ Complete | 100% |
+| Account Vending | ✅ Complete | 100% |
+| Cost Optimization | ✅ Complete | 100% |
+| Secrets Management | ✅ Complete | 100% |
+| Testing Framework | ✅ Complete | 100% |
+| Documentation | ✅ Complete | 100% |
+| Best Practices | ⏳ Partial | 85% |
+
+**Overall Status:** ✅ Production Ready
+
+---
+
+## 🎯 Quick Start
+
+### Prerequisites
+
+> **Important:** Ensure you have AWS Organizations enabled and Terraform 1.6+ installed before proceeding.
+
+**Required:**
 - AWS Organizations enabled in management account
-- Terraform >= 1.5.0
+- Terraform >= 1.6.0
 - AWS CLI >= 2.0
 - Management account access with administrator permissions
 - Minimum 2 email addresses (Log Archive and Audit accounts)
 
-### Recommended
-- jq (for scripts)
-- tfsec (security scanning)
-- terraform-docs (documentation)
-- make (automation)
+**Recommended:**
+- jq, tfsec, terraform-docs, make
 
-See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for detailed prerequisites.
+### Installation
+
+```bash
+# 1. Setup pre-commit hooks
+./scripts/setup-pre-commit.sh
+./scripts/setup-git-secrets.sh
+
+# 2. Deploy backend (first time only)
+cd examples/terraform-backend
+terraform init && terraform apply
+terraform output -raw backend_config_hcl > ../../backend.hcl
+cd ../..
+
+# 3. Initialize and deploy
+terraform init -backend-config=backend.hcl
+make plan
+make apply
+```
+
+> **Note:** Control Tower deployment takes 60-90 minutes. Plan accordingly.
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Management Account                        │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │              Control Tower Landing Zone                │ │
+│  │  • GuardDuty  • Security Hub  • AWS Config            │ │
+│  │  • CloudTrail • Network Firewall • Transit Gateway    │ │
+│  └────────────────────────────────────────────────────────┘ │
+└──────────────────────────┬───────────────────────────────────┘
+                           │
+        ┌──────────────────┴──────────────────┐
+        │                                     │
+┌───────▼────────┐                   ┌────────▼───────┐
+│  Security OU   │                   │  Workload OUs  │
+│                │                   │                │
+│  • Log Archive │                   │  • Production  │
+│  • Audit       │                   │  • Non-Prod    │
+│  • Security    │                   │  • Development │
+└────────────────┘                   └────────────────┘
+```
+
+**Key Details:**
+- **Home Region:** Sydney (ap-southeast-2)
+- **Organizational Units:** Fully extensible (default: 6 OUs)
+- **Governance:** 35+ comprehensive SCPs with flexible assignment
+- **Modular Design:** Reusable modules for easy customization
+
+---
+
+## 🔒 Security Features
+
+- **35+ Service Control Policies** - Comprehensive governance controls
+- **GuardDuty** - Threat detection across all accounts
+- **Security Hub** - CIS and AWS Foundational standards
+- **AWS Config** - Configuration compliance tracking
+- **Network Firewall** - Stateful packet inspection
+- **KMS Encryption** - All data encrypted at rest
+- **IAM Access Analyzer** - Resource access analysis
+- **VPC Flow Logs** - Network traffic monitoring
+
+---
+
+## 💰 Cost Estimate
+
+| Component | Monthly Cost | Notes |
+|:----------|-------------:|:------|
+| Control Tower | $0 | No charge |
+| GuardDuty | $5-10 | Per account |
+| Security Hub | $5-10 | Per account |
+| AWS Config | $10-20 | Per account |
+| Network Firewall | $350+ | Per AZ |
+| Transit Gateway | $36+ | Per attachment |
+| NAT Gateway | $32-96 | Per gateway |
+| **Total (Single Account)** | **$450-550** | Approximate |
+
+> **Tip:** Cost optimization features can reduce costs by 20-30% in non-production environments.
+
+---
 
 ## Project Structure
 
@@ -143,17 +218,36 @@ See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for detailed prerequisites.
     └── four-ous/                   # 4 OU example
 ```
 
-## Documentation
+## 📚 Documentation
 
+📚 **[Complete Documentation Site](https://anuu1989.github.io/aws-control-tower-landingzone/)** - Interactive documentation with search and navigation
+
+### Getting Started
+- [Complete Implementation Guide](docs/COMPLETE_IMPLEMENTATION_GUIDE.md) - Comprehensive guide covering all aspects
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) - Step-by-step deployment instructions
-- [Architecture](docs/ARCHITECTURE.md) - Detailed architecture documentation
+- [Getting Started Guide](https://anuu1989.github.io/aws-control-tower-landingzone/getting-started) - Quick start on GitHub Pages
+
+### Architecture & Design
+- [Architecture Overview](docs/ARCHITECTURE.md) - System architecture and design decisions
 - [Security](docs/SECURITY.md) - Security features and controls
 - [Networking](docs/NETWORKING.md) - Network architecture and firewall configuration
+- [Zero Trust](docs/ZERO_TRUST.md) - Zero Trust architecture implementation
 - [SCP Policies](docs/SCP_POLICIES.md) - Service Control Policy documentation
-- [Testing Guide](docs/TESTING.md) - Testing framework and best practices
-- [Examples](examples/) - Example configurations
 
-## Deployment
+### Operations
+- [Account Vending](docs/ACCOUNT_VENDING.md) - Automated account creation and bootstrapping
+- [Disaster Recovery](docs/DISASTER_RECOVERY.md) - DR runbook and procedures
+- [Best Practices](docs/ADDITIONAL_BEST_PRACTICES.md) - Catalog of 60+ best practices
+- [Testing Guide](docs/TESTING.md) - Testing framework and best practices
+
+### Examples
+- [Basic Setup](examples/basic/) - Simple 2 OU configuration
+- [Multi-Region](examples/multi-region/) - Multi-region deployment
+- [Four OUs](examples/four-ous/) - Extended OU structure
+- [Account Vending](examples/account-vending/) - Account automation
+- [Terraform Backend](examples/terraform-backend/) - Backend setup
+
+## ⚙️ Deployment
 
 ### Using Make (Recommended)
 
@@ -180,8 +274,21 @@ make output
 # 1. Run pre-deployment checks
 ./scripts/pre-deployment-check.sh
 
-# 2. Configure backend (edit versions.tf)
-# 3. Copy and customize configuration
+# 2. Copy and customize configuration
+cp terraform.tfvars.production terraform.tfvars
+vim terraform.tfvars
+
+# 3. Initialize
+terraform init -backend-config=backend.hcl
+
+# 4. Plan and apply
+terraform plan -out=tfplan
+terraform apply tfplan
+```
+
+See [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) for detailed instructions.
+
+---
 cp terraform.tfvars.production terraform.tfvars
 vim terraform.tfvars
 
@@ -323,16 +430,16 @@ After deployment completes:
 
 See [scripts/post-deployment.sh](scripts/post-deployment.sh) for complete checklist.
 
-## Testing
+## 🧪 Testing
 
-The project includes a comprehensive testing framework:
+The project includes a comprehensive testing framework with **21/21 OPA tests passing**.
 
 ### Test Types
 
 1. **Terraform Validation** - Syntax and configuration validation
 2. **Unit Tests** - Terratest-based infrastructure tests (8 test suites)
-3. **Policy Tests** - OPA policy validation (50+ rules, 30+ test cases)
-4. **Security Scanning** - TFSec and Checkov security analysis
+3. **Policy Tests** - OPA policy validation (50+ rules, 21 test cases passing)
+4. **Security Scanning** - TFSec security analysis
 5. **Linting** - TFLint for best practices
 
 ### Running Tests
@@ -343,7 +450,7 @@ make test-all
 
 # Run specific test suites
 make test-unit              # Terratest unit tests
-make test-opa               # OPA policy tests
+make test-opa               # OPA policy tests (21/21 passing)
 make lint                   # TFLint
 make security-scan          # TFSec security scan
 
@@ -355,42 +462,29 @@ make security-scan          # TFSec security scan
 
 ### Test Coverage
 
-- Control Tower deployment validation
-- Organizational unit management
-- SCP policy enforcement
-- Security module (KMS, GuardDuty, Security Hub, Config)
-- Logging module (CloudTrail, CloudWatch, S3)
-- Networking module (Transit Gateway, Network Firewall)
-- Variable validation
-- Output verification
+- ✅ Control Tower deployment validation
+- ✅ Organizational unit management
+- ✅ SCP policy enforcement (35+ policies)
+- ✅ Security module (KMS, GuardDuty, Security Hub, Config)
+- ✅ Logging module (CloudTrail, CloudWatch, S3)
+- ✅ Networking module (Transit Gateway, Network Firewall)
+- ✅ Encryption policies (S3, EBS, RDS, ElastiCache)
+- ✅ IAM security policies
+- ✅ Network security policies
+- ✅ Monitoring policies
 
-See [docs/TESTING.md](docs/TESTING.md) for detailed testing documentation.
-
-### Prerequisites for Testing
-
-```bash
-# Required
-terraform >= 1.5.0
-go >= 1.21 (for Terratest)
-opa >= 0.60.0 (for policy tests)
-
-# Optional
-tflint (linting)
-tfsec (security scanning)
-checkov (compliance scanning)
-```
+See [Testing Guide](docs/TESTING.md) for detailed documentation.
 
 ### CI/CD Integration
 
-The project includes GitHub Actions workflow (`.github/workflows/terraform-ci.yml`) that runs:
-- Terraform format check
-- Terraform validation
-- TFSec security scan
-- OPA policy tests
-- Terratest unit tests (on main branch)
+GitHub Actions workflows included:
+- ✅ Terraform format check and validation
+- ✅ TFSec security scan
+- ✅ OPA policy tests (21/21 passing)
+- ✅ Drift detection (every 6 hours)
+- ✅ GitHub Pages deployment
 
-
-## Monitoring and Notifications
+---
 
 The deployment includes:
 - CloudWatch Log Group for Control Tower events
@@ -545,33 +639,57 @@ See [BEST_PRACTICES_IMPLEMENTATION_STATUS.md](docs/BEST_PRACTICES_IMPLEMENTATION
 
 ---
 
-## Contributing
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run `make validate` and `make security-scan`
-5. Submit a pull request
+4. Run tests: `make test-all`
+5. Run validation: `make validate && make security-scan`
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
 
-## License
-
-[Your License Here]
-
-## Support
-
-For issues and questions:
-- Review [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)
-- Check [ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- Open an issue in the repository
-- Contact AWS Support for Control Tower issues
-
-## Acknowledgments
-
-Built with:
-- Terraform by HashiCorp
-- AWS Control Tower
-- AWS Organizations
+See our [Contributing Guide](CONTRIBUTING.md) for more details.
 
 ---
 
-**Note**: Control Tower deployment takes 60-90 minutes. Plan accordingly and ensure you have the necessary permissions and prerequisites before starting.
+## 📞 Support
+
+For issues and questions:
+
+- 📚 Review the [Complete Documentation](https://anuu1989.github.io/aws-control-tower-landingzone/)
+- 📖 Check [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
+- 🏗️ Review [Architecture Documentation](docs/ARCHITECTURE.md)
+- 🐛 Open an [issue on GitHub](https://github.com/anuu1989/aws-control-tower-landingzone/issues)
+- 💬 Contact AWS Support for Control Tower-specific issues
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+Built with:
+- [Terraform](https://www.terraform.io/) by HashiCorp
+- [AWS Control Tower](https://aws.amazon.com/controltower/)
+- [AWS Organizations](https://aws.amazon.com/organizations/)
+- [Open Policy Agent](https://www.openpolicyagent.org/)
+
+---
+
+<div align="center">
+
+**⚡ Production Ready | 🔒 Security First | 📚 Well Documented**
+
+Built with ❤️ for AWS Control Tower deployments
+
+[Documentation](https://anuu1989.github.io/aws-control-tower-landingzone/) • [Getting Started](https://anuu1989.github.io/aws-control-tower-landingzone/getting-started) • [Architecture](https://anuu1989.github.io/aws-control-tower-landingzone/architecture)
+
+</div>

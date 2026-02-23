@@ -21,60 +21,60 @@ import data.terraform.controltower.tagging
 # ============================================================================
 
 # Collect all deny rules from all modules
-deny contains msg if {
+deny[msg] {
     msg := encryption.deny[_]
 }
 
-deny contains msg if {
+deny[msg] {
     msg := s3.deny[_]
 }
 
-deny contains msg if {
+deny[msg] {
     msg := ec2.deny[_]
 }
 
-deny contains msg if {
+deny[msg] {
     msg := rds.deny[_]
 }
 
-deny contains msg if {
+deny[msg] {
     msg := network.deny[_]
 }
 
-deny contains msg if {
+deny[msg] {
     msg := iam.deny[_]
 }
 
-deny contains msg if {
+deny[msg] {
     msg := monitoring.deny[_]
 }
 
-deny contains msg if {
+deny[msg] {
     msg := compute.deny[_]
 }
 
 # Collect all warn rules from all modules
-warn contains msg if {
+warn[msg] {
     msg := encryption.warn[_]
 }
 
-warn contains msg if {
+warn[msg] {
     msg := s3.warn[_]
 }
 
-warn contains msg if {
+warn[msg] {
     msg := ec2.warn[_]
 }
 
-warn contains msg if {
+warn[msg] {
     msg := monitoring.warn[_]
 }
 
-warn contains msg if {
+warn[msg] {
     msg := compute.warn[_]
 }
 
-warn contains msg if {
+warn[msg] {
     msg := tagging.warn[_]
 }
 
@@ -89,7 +89,7 @@ violation_count := count(deny)
 warning_count := count(warn)
 
 # Overall compliance status
-compliant if {
+compliant {
     violation_count == 0
 }
 

@@ -17,7 +17,7 @@ required_tags := ["Environment", "ManagedBy", "Project"]
 # ============================================================================
 
 # POLICY: Resources must have required tags
-warn contains msg if {
+warn[msg] {
     resource := input.planned_values.root_module.resources[_]
     resource.values.tags
     missing := helpers.missing_tags(resource, required_tags)

@@ -11,7 +11,7 @@ import data.terraform.controltower.helpers
 # ============================================================================
 
 # POLICY: RDS instances must not be publicly accessible
-deny contains msg if {
+deny[msg] {
     rds := helpers.resources_by_type("aws_db_instance")[_]
     rds.values.publicly_accessible == true
     msg := sprintf("RDS instance '%s' must not be publicly accessible", [rds.address])
@@ -22,7 +22,7 @@ deny contains msg if {
 # ============================================================================
 
 # POLICY: RDS instances must have backup retention
-deny contains msg if {
+deny[msg] {
     rds := helpers.resources_by_type("aws_db_instance")[_]
     rds.values.backup_retention_period < 7
     msg := sprintf("RDS instance '%s' must have backup retention period of at least 7 days", [rds.address])
@@ -33,7 +33,7 @@ deny contains msg if {
 # ============================================================================
 
 # POLICY: Production RDS instances must be Multi-AZ
-deny contains msg if {
+deny[msg] {
     rds := helpers.resources_by_type("aws_db_instance")[_]
     helpers.is_production(rds)
     not rds.values.multi_az
@@ -41,7 +41,7 @@ deny contains msg if {
 }
 
 # POLICY: RDS instances must have deletion protection in production
-deny contains msg if {
+deny[msg] {
     rds := helpers.resources_by_type("aws_db_instance")[_]
     helpers.is_production(rds)
     not rds.values.deletion_protection

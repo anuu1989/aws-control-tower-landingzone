@@ -1,7 +1,7 @@
 # OPA Encryption Policy Tests
 package terraform.controltower.encryption
 
-test_s3_bucket_encryption_required if {
+test_s3_bucket_encryption_required {
     deny["S3 bucket 'aws_s3_bucket.test' must have encryption enabled"] with input as {
         "planned_values": {
             "root_module": {
@@ -17,8 +17,8 @@ test_s3_bucket_encryption_required if {
     }
 }
 
-test_s3_bucket_with_encryption_passes if {
-    count(deny) == 0 with input as {
+test_s3_bucket_with_encryption_passes {
+    not deny[_] with input as {
         "planned_values": {
             "root_module": {
                 "resources": [
@@ -38,7 +38,7 @@ test_s3_bucket_with_encryption_passes if {
     }
 }
 
-test_ebs_volume_encryption_required if {
+test_ebs_volume_encryption_required {
     deny["EBS volume 'aws_ebs_volume.test' must be encrypted"] with input as {
         "planned_values": {
             "root_module": {
@@ -54,7 +54,7 @@ test_ebs_volume_encryption_required if {
     }
 }
 
-test_kms_key_rotation_required if {
+test_kms_key_rotation_required {
     deny["KMS key 'aws_kms_key.test' must have automatic key rotation enabled"] with input as {
         "planned_values": {
             "root_module": {
@@ -70,7 +70,7 @@ test_kms_key_rotation_required if {
     }
 }
 
-test_rds_encryption_required if {
+test_rds_encryption_required {
     deny["RDS instance 'aws_db_instance.test' must have storage encryption enabled"] with input as {
         "planned_values": {
             "root_module": {
@@ -86,7 +86,7 @@ test_rds_encryption_required if {
     }
 }
 
-test_elasticache_encryption_at_rest_required if {
+test_elasticache_encryption_at_rest_required {
     deny["ElastiCache replication group 'aws_elasticache_replication_group.test' must have encryption at rest enabled"] with input as {
         "planned_values": {
             "root_module": {
@@ -105,7 +105,7 @@ test_elasticache_encryption_at_rest_required if {
     }
 }
 
-test_secrets_kms_encryption_required if {
+test_secrets_kms_encryption_required {
     deny["Secrets Manager secret 'aws_secretsmanager_secret.test' must use KMS encryption"] with input as {
         "planned_values": {
             "root_module": {

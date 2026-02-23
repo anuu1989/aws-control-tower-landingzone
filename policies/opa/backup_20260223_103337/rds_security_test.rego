@@ -1,7 +1,7 @@
 # OPA RDS Security Policy Tests
 package terraform.controltower.rds
 
-test_rds_public_access_denied if {
+test_rds_public_access_denied {
     deny["RDS instance 'aws_db_instance.test' must not be publicly accessible"] with input as {
         "planned_values": {
             "root_module": {
@@ -21,7 +21,7 @@ test_rds_public_access_denied if {
     }
 }
 
-test_rds_backup_retention_required if {
+test_rds_backup_retention_required {
     deny["RDS instance 'aws_db_instance.test' must have backup retention period of at least 7 days"] with input as {
         "planned_values": {
             "root_module": {
@@ -41,7 +41,7 @@ test_rds_backup_retention_required if {
     }
 }
 
-test_production_rds_multi_az_required if {
+test_production_rds_multi_az_required {
     deny["Production RDS instance 'aws_db_instance.prod' must be Multi-AZ"] with input as {
         "planned_values": {
             "root_module": {

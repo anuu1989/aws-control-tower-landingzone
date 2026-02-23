@@ -11,10 +11,9 @@ import data.terraform.controltower.helpers
 # ============================================================================
 
 # POLICY: EC2 instances must use IMDSv2
-deny contains msg if {
+deny[msg] {
     instance := helpers.resources_by_type("aws_instance")[_]
-    metadata_option := instance.values.metadata_options[_]
-    not metadata_option.http_tokens == "required"
+    not instance.values.metadata_options[_].http_tokens == "required"
     msg := sprintf("EC2 instance '%s' must use IMDSv2 (http_tokens=required)", [instance.address])
 }
 
@@ -23,7 +22,7 @@ deny contains msg if {
 # ============================================================================
 
 # POLICY: EC2 instances must have monitoring enabled
-warn contains msg if {
+warn[msg] {
     instance := helpers.resources_by_type("aws_instance")[_]
     not instance.values.monitoring
     msg := sprintf("EC2 instance '%s' should have detailed monitoring enabled", [instance.address])
@@ -34,7 +33,7 @@ warn contains msg if {
 # ============================================================================
 
 # POLICY: EC2 instances must have termination protection in production
-deny contains msg if {
+deny[msg] {
     instance := helpers.resources_by_type("aws_instance")[_]
     helpers.is_production(instance)
     not instance.values.disable_api_termination
